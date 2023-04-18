@@ -3,6 +3,7 @@ package spring.di;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import spring.di.entity.Exam;
 import spring.di.ui.ExamConsole;
 
 
@@ -56,6 +57,45 @@ import spring.di.ui.ExamConsole;
 //35. ExamConsole console = (ExamConsole)context.getBean("console"); (ExamConsole)이 들어가야한다.
 //36. (1) ExamConsole console = (ExamConsole)context.getBean("console");
 //	  (2) ExamConsole console = context.getBean(ExamConsole.class); 2번이 더 선호된다.
+//37. kor등의 값을 setting.xml에 셋팅해주려고 하는데 오류가 났다. 왜 ? NewlecExm.java에 값을 셋팅할 수 있는 것을 갖고있지 않아서.
+//38. 따라서 NewlecExam.java에 setter를 추가한다.
+//39. getter,setter를 NewlecExam에서 만든 후, setting.xml에 셋팅해줘야 한다. -->
+//   값이 들어갈땐 value를 써준다. -->
+//	<property name="kor">
+//	<value>10</value>
+//	</property>
+//	이런식으로도 설정할 수 있다.
+//		
+//	<property name="kor" value="10"/>
+//	<property name="eng" value="10"/>
+//	<property name="math" value="10"/>
+//	<property name="com" value="10"/>
+
+//40.  생성자를 통해서 값을 설정하는 방법. -> property 대신 constructor-arg 를 이용하면 된다.
+//41. Exam exam = new NewlecExam(10,10,10,10); 오버로드 생성자를 통해서 설정한다 하면 ?
+//42. 	NewlecExam.java 
+//      public NewlecExam() {
+//			}
+// 	위와같은 기본생성자를 만들어주고, 
+//		public NewlecExam(int kor, int eng, int math, int com) {
+//			this.kor = kor;
+//			this.eng = eng;
+//			this.math = math;
+//			this.com = com;
+//}
+// 	위와같이 Source에서 Constructor 생성자를 만들어준다. 그리고, 환경설정 파일에서 
+// 43. 	setting.xml
+//  	<constructor-arg index="0" value="10"/>
+//		<constructor-arg index="1" value="20"/>
+//		<constructor-arg index="2" value="30"/>
+//		<constructor-arg index="3" value="40"/>
+//		index는 순서를 뜻함. name으로도 설정할 수 있다.
+// 		또한, type 으로 형식을 거론할 수도 있다. 
+// 44. toString으로 출력을 확인해보기. 
+// 45.  속성을 설정하는 방법은 밑에 또 있다.
+//
+// 46. 일단, setting.xml namespaces에서 p태그를 체크해준다. 혹은 수동 입력 설정.
+// 47. 
 public class Program {
 
 	public static void main(String[] args) {
@@ -70,7 +110,10 @@ public class Program {
 				new ClassPathXmlApplicationContext("spring/di/setting.xml");
 		//이 녀석이 지시서를 읽는다. 이 녀석
 		//test1
-//		ExamConsole console = (ExamConsole)context.getBean("console");
+//		1. ExamConsole console = (ExamConsole)context.getBean("console");
+		Exam exam = context.getBean(Exam.class);
+		System.out.println(exam.toString());
+//		2.
 		ExamConsole console = context.getBean(ExamConsole.class); 
 		//이 방식이 더 선호된다.
 		console.print();

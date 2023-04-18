@@ -1,13 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans 
 	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
-	
 	<!-- Exam exam = new NewlecExam() -->
-	<bean id="exam" class="spring.di.entity.NewlecExam" />
-	<!-- ExamConsole console = new GridExamConsole() -->
-	<bean id="console" class="spring.di.ui.GridExamConsole">
+	
+	<bean id="exam" class="spring.di.entity.NewlecExam" p:kor="10" 
+			p:eng="10" p:math="20" p:com="30"/>
+	<!-- 	getter,setter를 NewlecExam에서 만든 후, 셋팅해줘야 한다. -->
+	<!-- 값이 들어갈땐 value를 써준다. -->
+<!--	<property name="kor">
+		<value>10</value>
+		</property>
+		이런식으로도 설정할 수 있다.
+		 -->	
+<!-- 		<property name="kor" value="10"/>
+		<property name="eng" value="10"/>
+		<property name="math" value="10"/>
+		<property name="com" value="10"/> -->
+<!-- 	<constructor-arg index="0" value="10"/>
+	<constructor-arg index="1" value="20"/>
+	<constructor-arg index="2" value="30"/>
+	<constructor-arg index="3" value="40"/> -->
+<!-- 	</bean> -->
+	<!-- ExamConsole console = new InlineExamConsole() -->
+	<bean id="console" class="spring.di.ui.InlineExamConsole">
 		<property name="exam" ref="exam"></property>
 	<!--  console.setExam(exam); -->
 	</bean>
