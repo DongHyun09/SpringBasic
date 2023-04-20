@@ -1,9 +1,13 @@
 package spring.di;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import spring.di.entity.Exam;
+import spring.di.entity.NewlecExam;
 import spring.di.ui.ExamConsole;
 
 
@@ -95,7 +99,8 @@ import spring.di.ui.ExamConsole;
 // 45.  속성을 설정하는 방법은 밑에 또 있다.
 //
 // 46. 일단, setting.xml namespaces에서 p태그를 체크해준다. 혹은 수동 입력 설정.
-// 47. 
+// 47. 그리고, 값을 입력.
+// 48. ArrayList를 참조하는 객체를 만들어 봤다 -> List. seeting.xml도 참고하기.
 public class Program {
 
 	public static void main(String[] args) {
@@ -117,5 +122,13 @@ public class Program {
 		ExamConsole console = context.getBean(ExamConsole.class); 
 		//이 방식이 더 선호된다.
 		console.print();
+		
+		List<Exam> exams = (List<Exam>) context.getBean("exams");//new ArrayList<>();
+		//exams.add(new NewlecExam(1,1,1,1));
+		
+		
+		for(Exam e : exams)
+			System.out.println(e);
+		
 	}
 }

@@ -2,8 +2,11 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:p="http://www.springframework.org/schema/p"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans 
-	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 	<!-- Exam exam = new NewlecExam() -->
 	
 	<bean id="exam" class="spring.di.entity.NewlecExam" p:kor="10" 
@@ -29,4 +32,21 @@
 		<property name="exam" ref="exam"></property>
 	<!--  console.setExam(exam); -->
 	</bean>
+	
+		<util:list id="exams" list-class="java.util.ArrayList">
+			<bean class="spring.di.entity.NewlecExam" p:kor="1" 
+			p:eng="1"/> <!-- 직접 생성 -->
+			<ref bean="exam"/> <!-- 위에 있는 것을 참조해서 list에 추가한것 -->
+		</util:list>
+	
+	
+<!-- 	<bean id="exams" class="java.util.ArrayList">
+	<constructor-arg>
+		<list>
+			<bean class="spring.di.entity.NewlecExam" p:kor="1" 
+			p:eng="1"/> 직접 생성
+			<ref bean="exam"/> 위에 있는 것을 참조해서 list에 추가한것
+		</list>
+	</constructor-arg>
+	</bean> -->
 </beans>
