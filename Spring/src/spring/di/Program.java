@@ -1,13 +1,8 @@
 package spring.di;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import spring.di.entity.Exam;
-import spring.di.entity.NewlecExam;
 import spring.di.ui.ExamConsole;
 
 
@@ -101,6 +96,23 @@ import spring.di.ui.ExamConsole;
 // 46. 일단, setting.xml namespaces에서 p태그를 체크해준다. 혹은 수동 입력 설정.
 // 47. 그리고, 값을 입력.
 // 48. ArrayList를 참조하는 객체를 만들어 봤다 -> List. seeting.xml도 참고하기.
+
+//49. Annotation을 이용했을 때의 장점 (DI작업을 Annotation을 사용) 
+//50. 그냥 객체를 바꾸면 설정도 바뀌면 안되냐 ? 라는 의문을 가지기 시작하면서 사용하기 시작함.
+// 설정	<context:annotation-config />는 Annotation이 있다는 뜻이다.
+// Exam이라는 객체를 자동으로 찾아서 셋팅해달라는 의미.
+//51. 잘못하다가는 잘못된 방향의 DI를 할수도 있다.
+//52. Spring에서 xml bean을 가지고 컨테이너에 담고있다(보따리)
+//53. 이 xml을 하나씩 없애고 하나씩 꽂아넣는 과정을 가질것이다.
+//54. Autowired를 가지고 자동으로 객체를 주입해주는데, 특정 id를 갖고있는 객체를 사용하려면,
+// @Qualifier를 사용해주면 된다.
+//55. class 위에 @component를 붙이면 객체화 되는 작업을 한다.
+//56. <context:annotation-config />로는 @Component를 읽을수 없다.
+//57. <context:component-scan base-package="spring.di.ui"/>를 써야 한다 !
+//58. 이것을 쓰면 안쪽에 있는 오토와이어드도 읽어드린다. annotaion-config는 사실상 없어도 된다.
+//59. @Service도 된다. 이것은 component와 똑같다. @Controller도 마찬가지.
+//60. xml파일이 java파일로 바꿀것이다.
+//61. @bean으로 객체를 컨테이너에 담을수있다.
 public class Program {
 
 	public static void main(String[] args) {
@@ -111,24 +123,31 @@ public class Program {
 //		
 //		console.setExam(exam); // setter를 통하는 방법
 		
-		ApplicationContext context = 
-				new ClassPathXmlApplicationContext("spring/di/setting.xml");
+//		ApplicationContext context = 
+//				new ClassPathXmlApplicationContext("spring/di/setting.xml");
 		//이 녀석이 지시서를 읽는다. 이 녀석
 		//test1
-//		1. ExamConsole console = (ExamConsole)context.getBean("console");
-		Exam exam = context.getBean(Exam.class);
-		System.out.println(exam.toString());
+		ApplicationContext context = 
+				new AnnotationConfigApplicationContext(NewlecDIConfig.class);
+
+//		Exam exam = context.getBean(Exam.class);
+//		System.out.println(exam.toString());
+
+//		1. 
+		ExamConsole console = (ExamConsole)context.getBean("console");	
+		//-> 이것처럼 이름이 콘솔인 객체를 찾아달라 ! 그러면 오류가 난다. (15강)
+		// 오류를 없애기 위해서는 component에 console 이름을 넣어준다. 
+		//아니면 2번을 사용하면 된다.
 //		2.
-		ExamConsole console = context.getBean(ExamConsole.class); 
+//		ExamConsole console = context.getBean(ExamConsole.class); 
 		//이 방식이 더 선호된다.
 		console.print();
 		
-		List<Exam> exams = (List<Exam>) context.getBean("exams");//new ArrayList<>();
+//		List<Exam> exams = (List<Exam>) context.getBean("exams");//new ArrayList<>();
 		//exams.add(new NewlecExam(1,1,1,1));
 		
 		
-		for(Exam e : exams)
-			System.out.println(e);
-		
+//		for(Exam e : exams)
+//			System.out.println(e);	
 	}
 }
