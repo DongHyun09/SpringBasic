@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-<<<<<<< HEAD
-Build-Jdk-Spec: 17
-=======
-Built-By: SAMSUNG
-Build-Jdk: 17.0.6
->>>>>>> branch 'main' of https://github.com/DongHyun09/SpringBasic.git
-Created-By: Maven Integration for Eclipse
-
