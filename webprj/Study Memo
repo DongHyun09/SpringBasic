@@ -799,6 +799,6 @@ public class JDBCNoticeService implements NoticeService{
 
 이렇게 수정. 
 
-
-
-
+dispatcher-servlet.xml 분할 -> 개인이 아닌, 팀 프로젝트로서 실용적으로.
+jdbc, oracle을 이용하여 연결. ojdbc 버전 오류 -> 10 -> 8 -> 6
+Annotation DI, DataSource
