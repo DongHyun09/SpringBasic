@@ -375,9 +375,429 @@ maven compiler : 1.8
 
 
 
------(4.25) (17강 ~ )-----
+-----(4.25) (17강 ~ 26강 )-----
 
 
+
+
+### 타일즈 설정에 wildcard 사용하기 (18강)
+
+Tiles.xml에서 
+
+ <definition name="notice.list" template="/WEB-INF/view/customer/inc/layout.jsp">
+    <put-attribute name="title" value="공지사항" />
+    <put-attribute name="header" value="/WEB-INF/view/inc/header.jsp" />
+    <put-attribute name="visual" value="/WEB-INF/view/customer/inc/visual.jsp" />
+    <put-attribute name="aside" value="/WEB-INF/view/customer/inc/aside.jsp" />
+    <put-attribute name="body" value="/WEB-INF/view/customer/notice/list.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/view/inc/footer.jsp" />
+    </definition>
+
+이것을 패턴으로 사용하게끔 할것이다.
+list와 detail을 함께 넣어줘야 되기때문에 문법은 아래와 같다.
+
+<definition name="notice.*"  ~~ 
+<put-attribute name="body" value="/WEB-INF/view/customer/notice/{1}.jsp" />
+이런식으로 패턴을 만들 수 있다.
+
+wildcard를 사용하는 방법은 여러가지가 있다. 
+
+
+https://tiles.apache.org/framework/tutorial/index.html 
+
+이곳에서 
+wildcard support를 들어간다.
+우리는 /를 사용하면 ViewResolver가 충돌이 난다. 
+실질적으로 사용할때는 그렇게 많이 사용하지는 않는다.
+
+
+### Root 페이지들을 위한 Layout 페이지 만들기 (19강)
+
+
+index페이지 처럼 Root있는 페이지를 만든다고 하면, Root 있는 Layout이 필요하다.
+
+ index도 layout을 만들어주고,
+
+  <definition name="root.*" template="/WEB-INF/view/inc/layout.jsp">
+    <put-attribute name="title" value="공지사항" />
+    <put-attribute name="header" value="/WEB-INF/view/inc/header.jsp" />
+    <put-attribute name="body" value="/WEB-INF/view/{1}.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/view/inc/footer.jsp" />
+   </definition>
+
+이와같은 tiles 설정을 해준다. 
+
+definition name="*"을 해주면 모든 경로를 허용하는것이기 때문에, 이렇게 하면 안된다.
+ <definition name="root.*" template="/WEB-INF/view/customer/inc/layout.jsp">
+따라서, 이렇게 만들어준다 . 
+IndexController도 root.index로 바꿔줘야 한다. 그럼 정상 출력이 된다 !
+
+
+### 데이터 서비스 클래스 준비하기(NoticeService) (20강)
+
+오라클 및 파일들 준비 Notice entity(DTO)와 NoticeService(DAO)
+
+
+
+
+###Service 객체 사용하기(21강)
+
+스프링은 기본적으로 DI를 지원한다.
+한번 생성한 객체를 다양한 Controller가 갖다 쓸수있도록 활용한다.
+Servlet.xml이 있다. 
+우리가 bean이라는 이름으로 설정하고 있었다. 
+여기에 설정했던 내용들은 IoC컨테이너에 담겨지게 된다.
+이것을 읽게되면 IoC컨테이너에 담겨지는 것이다.
+<bean class="NoticeService"/>
+이러면 IoC컨테이너에 NoticeService가 담겨진다.
+이 보따리에 있는 녀석을 Controller에서 어떻게 사용할 것이냐 ?
+보자 !
+
+   
+   <bean id="noticeService" class="com.newlecture.web.service.NoticeService"/>
+   
+이렇게 dispatcher-servlet xml파일에 bean 설정을 하면 IoC컨테이너에 담기게 되는것이다.
+Controller 가 이 녀석을 써야되기때문에 Controller로 가야 된다. 
+
+<bean name="/notice/list" class="com.newlecture.web.controller.notice.ListController"/>
+
+이 녀석이
+
+<bean name="/notice/list" class="com.newlecture.web.controller.notice.ListController">
+    	<property name="noticeservice" ref="noticeService"/>
+</bean>
+
+이렇게 바뀌게 된다.
+여기서 property ref는 <bean id="noticeService" class="com.newlecture.web.service.NoticeService"/>
+이 녀석을 말하는 것이고
+
+name은 ListController가 갖고있는 setter를 말한다. 
+따라서, ListController에 setter를 만들어준다.
+
+	private NoticeService noticeService;
+	
+	
+	
+	public void setNoticeService(NoticeService noticeService) {
+		this.noticeService = noticeService;
+	}
+
+name은 setNoticeService를 말한다.
+ref는 (NoticeService noticeService) 여기에 전달된다.
+
+Controller.java
+		List<Notice> list = noticeService.getList(1, "TITLE", "");
+		mav.addObject("list", list);
+
+list.jsp
+		<c:forEach var="n" items="list">
+				<tr>
+					<td>${n.id }</td>
+					<td class="title indent text-align-left"><a href="detail">
+					${n.title }</a></td>
+					<td>${n.writerId }</td>
+					<td>${n.regDate }</td>
+					<td>${n.hit }</td>
+				</tr>
+			</c:forEach>
+
+getter id에 맞춰서 넣어준다. jstl EL 사용.
+
+에러가 난다.
+notice객체가 안나왔다는 얘기.
+list라는 문자열을 items로 쓰면 안된다.
+
+<c:forEach var="n" items="${list }">
+<tr>
+	<td>${n.id }</td>
+	<td class="title indent text-align-left"><a href="detail">
+	${n.title }</a></td>
+	<td>${n.writerId }</td>
+	<td>${n.regDate }</td>
+	<td>${n.hit }</td>
+</tr>
+</c:forEach>
+
+이렇게 고쳐준다 !! 
+
+근데 왜 안나오는가 ...? 하니 
+jdk 버전이 맞지않다는 오류가 !
+그냥 ojdbc 버전을 낮춰서 넣어보자 ㅎㅎ !
+10이 안되니 8로... 8도 안되네 ... ?? 6으로..... 
+된다 !!!!!
+
+### Service 객체 분리하기 (22강)
+
+ JDBCService 객체가 있다. 
+Controller가 있는데, NoticeController에서는 멤버변수로 Service라는 변수를 만들고 noticeservice라는 자료형을
+만들고 사용했다. JPA 혹은 MyBatis 구현 기능이 달라졌다고 하면, 
+
+ex) JDBCService를 쓰다가 JPAService로 바꾸면 Controller에서 오류가 나는 것을 볼 수 있을것이다.
+    기능에만 focus가 맞춰져있는 interface가 있으면 인터페이스만 맞으면 JPA던 JDBC던
+상관이없다.
+즉 Controller-> (Interface)-> JDBC or JPA -> DB
+XML로 수정하면 Java코드는 수정할 필요가 없다.
+우리가 반영하는 코드는 Service Interface만 추가하겠다는 것이다. 
+코드 예제를 한번 실습으로 봐보자 .
+
+우리는 JDBC를 이용해서 구현하고 있다.
+
+public class JDBCNoticeService implements NoticeService { ~~~
+
+이런 jdbc 파일에서 NoticeService라는 interface를 추가해주자.
+
+public interface NoticeService {
+
+	List<Notice> getList(int page, String field, String query) throws ClassNotFoundException, SQLException;
+	int getCount() throws ClassNotFoundException, SQLException;
+	int insert(Notice notice) throws SQLException, ClassNotFoundException;
+	int update(Notice notice) throws SQLException, ClassNotFoundException;
+	int delete(int id) throws ClassNotFoundException, SQLException;
+}
+
+자, 이렇게 List라는 녀석의 interface를 만들어줬다.
+
+
+<bean id="noticeService" class="com.newlecture.web.service.JDBCNoticeService"/>
+   
+</beans>
+
+이 설정만 이런식으로 바꿔주면 된다.
+
+
+### Connection 정보 분리하기(23강)
+
+배포를 한다고 하면, sql 비밀번호를 변경하고 컴파일을 쉽게하기 위해 
+변경에 대한 부분들을 빼고 XML에 둘것이다. (sql 연결정보)
+
+
+JDBC.java 
+
+private DataSource dataSource;
+
+//Class.forName(driver);
+//Connection con = DriverManager.getConnection(url,uid, pwd);
+
+Connection con = dataSource.getConnection();
+
+dataSource는 null을 가지고있기때문에 꽂아넣어줘야한다.
+
+xml 파일에
+ <bean id="noticeService" class="com.newlecture.web.service.jdbc.JDBCNoticeService">
+ 	<property name="dataSource" ref="dataSource" />
+ </bean>
+  <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+  	<property name="driverClassName"></property>
+  	<property name="url"></property>
+  	<property name="username"></property>
+  	<property name="password"></property>
+  </bean>
+
+이렇게 셋팅을 해준다. 
+
+그리고 라이브러리에 jdbc도 추가해준다 ! 
+
+
+
+####Spring 설정 파일 분리하기 (24강)
+
+xml파일을 분리할건데 왜 해야되는지 알아보자. 
+우리가 원하면 파일명도 위치도 마음대로 쓸수있다.
+
+하나로 되어있는 파일을 여러개로 나눌것이다.
+
+dispatcher-servlet에 있는 내용을 3개로 분리할것이다.
+
+굳이 3개로 나눈 이유는 ?
+
+프로젝트를 진행하다보면 여러 사람이 만들게된다.
+그럴 경우 각각 역할을 부여하게 될것이다.
+이걸 하나의 파일로 두게 되면 여러 사람이 한 파일로 계속해서 작업을 하기때문에
+동기화가 많아지면서 충돌이 날 가능성이 크다. 
+
+따라서 
+security-context.xml , service-context.xml 등등 이런식으로 나눠서 설정을 한다.
+
+그리고 web.xml에 설정파일이 어떠한 이름으로 어디에있다고 말을 해줘야한다.
+
+ <servlet>
+ 	<servlet-name>dispatcher</servlet-name>
+ 	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+ 	<init-param>
+ 		<param-name>contextConfigLocation</param-name>
+ 		<param-value>/WEB-INF/spring/servlet-context.xml</param-value>
+ 	</init-param>
+ </servlet>
+
+이렇게 만들어두고 
+이렇게 만들면, 하나만 지정할수있다. 이것은 서블릿 관련 내용 !!!!!
+두개의 파일을 지정할 수 있는 방법은 따로있는데, 
+
+<listener>
+	<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+</listener>
+<context-param>
+	<param-name>contextConfigLocation</param-name>
+	<param-value>
+		/WEB-INF/spring/service-context.xml
+		/WEB-INF/spring/security-context.xml
+	</param-value>
+</context-param>
+
+이것은 Service와 보안과 관련된 내용이다. 
+
+servlet이라는 녀석은 실행은 언제 됩니까 ?!
+하면
+
+url mapping되어있고 매핑이 오면 Servlet이 메모리가 올라가면 첫 로드는 느리게된다.
+dispatcher servlet 녀석은 먼저 올라가야 하기때문에
+
+ <servlet>
+ 	<servlet-name>dispatcher</servlet-name>
+ 	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+ 	<init-param>
+ 		<param-name>contextConfigLocation</param-name>
+ 		<param-value>/WEB-INF/spring/servlet-context.xml</param-value>
+ 	</init-param>
+ 	<load-on-startup>1</load-on-startup>
+ </servlet>
+
+이렇게 1을 넣어서 우선순위를 넣어줄 수 있다. 
+
+<async-supported>true</async-supported>
+이런식으로 하면 이 servlet은 비정기적으로 road하는 것도 가능해진다 (?)
+
+### Annotation을 활용한 서비스 객체 DI (25강)
+
+스프링에서는 xml보다는 annotation과 java 설정으로 바꾸려고 한다.
+혹은 조금 더 경량화된 xml파일을 쓰려고 한다. 
+
+  <bean name="/notice/list" class="com.newlecture.web.controller.notice.ListController">
+    	<property name="noticeService" ref="noticeService"/>
+    </bean>
+
+
+<property name="noticeService" ref="noticeService"/>
+
+이 부분을 지우고 Annotaion을 사용할것이다.
+
+ListController에서
+
+public class ListController implements Controller{
+
+	private NoticeService noticeService;
+	
+	@Autowired
+	public void setNoticeService(NoticeService noticeService) {
+		this.noticeService = noticeService;
+	}
+
+	@Override
+	public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		
+		
+		ModelAndView mav = new ModelAndView("notice.list");
+		List<Notice> list = noticeService.getList(1, "TITLE", "");
+		mav.addObject("list", list);
+		
+		return mav;
+	}
+
+	
+	 
+}
+
+이렇게 @Autowired를 사용할것이다.
+소스코드를 설정할 수 있는 객체에만 이것을 사용할 수 있다. 
+
+저렇게 @Autowired를 붙였다. 그 다음은 ?
+
+servlet-context에 <context:annotation-config/>
+이 녀석을 추가해준다.
+
+이 @Autowired를 setter라는 녀석에 할수도 있고,
+private NoticeService noticeService 위에 할수도있다.
+둘다 차이는 별로 없다. 다만,
+
+무언가를 수행하고싶다면, 맨위에 처럼 수행할수있는 여지가 있는것이다. 
+뭔가 바인딩 될때 수행할게 있다면 맨 위처럼 그냥 해주면 된다. 
+그럴 여지가 없으니, 
+@Autowired
+private NoticeService noticeService;
+
+이렇게 둘것이다. 
+
+우리가 바인딩하는 내용이 이곳에만 있는것이 아니다. 
+
+service도 또한 @Autowired를 해야한다.
+
+service.xml
+
+<bean id="noticeService" class="com.newlecture.web.service.jdbc.JDBCNoticeService">
+ 	<!-- <property name="dataSource" ref="dataSource" /> -->
+ </bean>
+       
+
+JDBCNoticeService.java
+
+public class JDBCNoticeService implements NoticeService{
+//	private String url = "jdbc:oracle:thin:@localhost:1521/xe";
+//	private String uid = "hr";
+//	private String pwd = "hr";
+//	private String driver = "oracle.jdbc.driver.OracleDriver";
+	
+	@Autowired
+	private DataSource dataSource;
+
+이렇게 간편하게 바인딩할수 있다. 	
+
+service.xml에도 
+
+<context:annotation-config/>
+
+이녀석을 통해서 설정해줬다는 것을 말해줘야 한다.
+
+###Annotation으로 서비스 객체 생성하기 (26강)
+
+service 객체 
+
+   <!--  <bean id="noticeService" class="com.newlecture.web.service.jdbc.JDBCNoticeService">
+ 	<property name="dataSource" ref="dataSource" />
+ </bean>
+        -->
+
+싹 주석처리 ~
+
+@Component
+public class JDBCNoticeService implements NoticeService{
+
+얘 좀 생성해주세요 ~ 하고 달아주자 
+얘를 발견하려면 어느 범위 내에있는것은 scan해주세요 ~ 
+객체로 만들어서 IoC컨테이너에 담아주세요 ~ 해야한다.
+
+이녀석을 찾을때는 package를 써야한다.
+
+<!-- <context:annotation-config/> -->
+ <context:component-scan base-package="com.newlecture.web.service" />
+
+이 안에 저 기능이 기본적으로 있기때문에 위 코드는 굳이 쓸 필요가 없다.
+저걸 객체화하고, 그 안에 있는 Annotation을 자동으로 찾아주기때문에 굳이 같이 쓸 필요가 없다는 것이다.
+
+컴퍼넌트는 객체를 생성해서 담을때 
+
+1@Component,2@Controller,3 @Service,4 @Repository
+
+역할에 맞게 설정해줘야한다. 
+
+@Service // @Controller, @Service, @Repository
+public class JDBCNoticeService implements NoticeService{
+//	private String url = "jdbc:oracle:thin:@localhost:1521/xe";
+//	private String uid = "hr";
+//	private String pwd = "hr";
+//	private String driver = "oracle.jdbc.driver.OracleDriver";
+	
+
+이렇게 수정. 
 
 
 
