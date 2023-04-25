@@ -1,0 +1,384 @@
+---(4.22)---
+
+
+
+
+1. 스프링이라는 놈은 MVC를 지원한다. Dispatcher는 중간매개의 역할을 한다.
+사용자 입력을 쉽게 Controller에 준다면, Controller에서 Dispatcher에게 View를 언급하게 되면
+Dispatcher에서 참조하여 정상적으로 View에 전달해준다.
+
+2.Dispatcher에 모든 URL의 요청이 오게된다. 이를 알맞는 Controller에 배분을 해야된다.
+이를 위해서는 설정파일이 필요하다. -servlet.xml <url-mapping> 
+servlet관련은 다 Dispatcher.
+
+3.Controller는 반환할때 model과 view를 Dispatcher에 전달하게 되면, 
+  이를 Dispatcher가 요청하면서 view를 찾아 이곳에서, 관련 데이터를 요청하게 된다.
+
+### 실습 환경설정 (1~3강)
+1. maven prj 만들기
+2. tomcat의 WEB-INF파일을 통째로 webapp에 복붙해넣자.
+3. pom.xml에 컴파일러 1.8을 따라쓰니, project xmlns 첫번째 줄에서 오류가 남. 
+4. tomcat dependency도 추가해주기 (버전에 맞게)
+ 
+<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.2.2</version>
+			</plugin>		
+		</plugins>
+	</build>
+pom.xml에 이런 빌드를 추가.
+
+했더니 이번엔 jsp에서 error가 난다.
+server runtime enviroments에 톰캣을 추가해주고, java build path 라이브러리에 
+tomcat 추가해주니 없어졌다.
+
+이후로 포트 번호 변경.
+web browser도 그냥 chrome으로 변경하는게 편하겠다. 
+
+
+### Spring Dispatcher를 front 컨트롤러로 설정하기, Dispatcher-servlet.xml (4강~5강)
+
+1. Spring mvc dependency를 불러온다.
+2. prj 라이브러리의 maven dependencies -> springframework에서 DispatcherServlet.class
+   -> 오른쪽 클릭 Copy Qualified name 클릭 -> web.xml로 이동
+3. indexController class를 만들어준다. 
+	 ->여기서 DispatcherServlet이 servlet역할을 할것이다.
+4. 남이 만든 servlet을 설정할때는 xml을 이용해서 설정할수 밖에 없다.
+
+
+<servlet>
+	<servlet-name>dispatcher</servlet-name>
+	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+</servlet>
+<servlet-mapping>
+	<servlet-name>dispatcher</servlet-name>
+	<url-pattern>/</url-pattern>
+</servlet-mapping>
+
+주의할점은, 패키지명과 클래스명을 복사하는데, 확장자까지 붙게되는데, class를 지워줘야 된다.
+servlet-name은 어떻게 지어도 상관이없다.
+servlet-mapping은 사용을 요청할수있는 주소이다. 
+mapping하기 위한 url은 / 이놈이 받겠다고 설정하는 것.
+
+이렇게하면 servlet 설정은 끝났다.
+
+5. 이제 실행해보는데 HI가 출력되면 안된다. 
+Front Controller는 모든 url을 받아들이는것이다. 
+/ 이놈은 다 통과가 되는 것이다.
+근데 여기서 Dipsatcher의 허락 하에 반환되도록 하게 설정해줘야 한다.
+그것이 <url-pattern>/*</url-pattern>
+mapping 정보를 갖고있어야만 반환이 된다.
+
+자, 이 mapping 정보를 넣기 위해 servlet.xml을 만들어야 한다.
+여기서 *-servlet.xml의 형태의 파일을 만든다.
+*-servlet에서 *은 servlet-name이고, servlet은 정해진 이름이다.
+
+
+### IndexController 작성하기 (6강)
+
+1. servlet.xml에는 spring이 사용할수있는 설정들을 담는다.
+어떤 구문으로, 어떻게, 무엇을 작성할 수 있는지 우리는 알수없다.
+이 레퍼런스를 가봐야 알수있다.
+사이트는 
+https://docs.spring.io/spring-framework/docs/
+버전에 맞게 들어가서, 스프링프레임워크 레퍼런스 들어가기 -> 홈페이지 좌측에 IoC컨테이너에서 xml ex 코드를 긁어서 복붙
+그냥 기존 eclipse에서 쓰던거 가져옴
+자, 이제 객체화 작업을 위해 bean을 써주는데, id에 url 요청을 위해 /index를 기입.
+<bean id="/index" class="com.newlecture.web.controller.IndexController">
+
+</bean>
+	
+bean이라는 형태로 만들어놓으면 컨테이너에 담긴다.
+POJO형식으로 만들어놓은 컨테이너 안의 컨트롤러들이 있다고 예를 들어보자.
+/index 요청을 했다고했을때, AController, BController와 같은 껍데기가 아닌, 
+요청을 수반할수있는 함수를 갖고있어야되는데 그 함수명이 "handleRequest"이다.
+
+그렇게 IndexController.java 생성.
+
+
+
+
+
+
+
+-----(4.24) (6강 ~ 17강)-----
+
+
+
+
+
+
+
+public class IndexController implements Controller{
+
+	@Override
+	public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		
+		ModelAndView mav = new ModelAndView();
+		mav.addObject("data", "Hello Spring MVC");
+		mav.setViewName("index.jsp");
+		
+		return mav;
+	}
+	
+}
+mav라는 녀석의 이름을 담아서(data) index.jsp에 전달한다.
+이러고, Controller를 실행해보면 404 오류가 난다.
+forward와 관련해서 문제가 발생했다.
+/*에서 *을 빼본다. 강의에서 실행이 되는데, 나는 안된다.
+근데 실행이되어도 이것은 문제가 된다. 
+
+
+###View 페이지를 위한 위치 (7강)
+Controller와 View(jsp)가 있다.
+이것을 한몸뚱이처럼 써야되는데, view페이지만 요청이되어서 사실상 분리되어서 실행되는거나 마찬가지이다.
+web-inf는 비공개 영역이라 이곳에서 view 폴더를 만들어 넣으면 된다. 
+그리고 , Controller에서 요청을 다시 하게끔 한다. 그리고, 최종적으로.
+mav.setViewName("WEB-INF/view/index.jsp");
+이런 viewname이 되게된다. 혹은 
+/WEB-INF
+예를 들어서 
+ <bean name="/aa/index" class="com.newlecture.controller.IndexController">
+aa라는 폴더가 없으니 이런식으로 쓰면 오류가 발생한다.
+
+Context명으로 url이 보여지면 안되기때문에 
+속성에서 Context 명을 /로 바꿔주고 서버에서 지운다.
+
+###ViewResolver (8강~9강)
+
+위와같은 방법을 쓰면 페이지를 찾는 방법이 조금 복잡해진다.
+따라서 viewresolver라는 녀석을 쓴다.
+
+이걸 해주기 위해서는, "index"만 셋팅해주고, 나머지 (/WEB~~~)를 다른 곳에 설정한다.
+
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    	<property name="prefix" value="/WEB-INF/view/"></property>
+    	<property name="suffix" value=".jsp"></property>
+    </bean>
+바로 이렇게.
+
+자, 정상 출력확인 했다.
+
+newlecture html 파일을 옮겨주고, 여기서 이제 css image js파일만 webapp에 옮겨주고, 
+확인해보자. 이미지 로고가 안나옴 !! 
+
+####정적 파일 서비스하기(10강)
+css등 막히는 이유 ? 
+
+web.xml에서 
+	<url-pattern>/*</url-pattern>
+이것의 의미는 jsp까지만 막겠다는 의미. 
+
+	<url-pattern>/</url-pattern>
+이것의 의미는 jsp빼고 정적인 파일은 모두 막고있는 것이다.
+
+이것을 해주기 위해서는 ?
+
+<mvc:resources location="/images/" mapping="images/** />
+<mvc:resources location="/js/" mapping="/js/** />
+등이 있다. 이것도 있지만, 
+일반적으로는 static한 파일들은 resource라는 파일을 만들어서 거기다가 다 때려박는다.
+url은 이 resource라는 파일을 활용할수있도록 한다.
+
+dispatcher-servlet xml 파일에
+
+xmlns에 
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+
+스키마로케이션에
+        http://www.springframework.org/schema/mvc
+        https://www.springframework.org/schema/mvc/spring-mvc.xsd"
+를 추가해준다.
+
+그리고
+ <mvc:resources location="/resource/" mapping="/resource/**"></mvc:resources>
+
+이렇게 resource라는 폴더를 만들고 (이름은 임의로) 이곳에 이미지 파일 아무거나 넣어보고 
+실행해보니 나온다 !
+
+<img src="/resource/images/logo.png" alt="뉴렉처 온라인" /> 
+요즘은 위에 한 방식대로는 이렇게 안하고 
+
+ <mvc:resources location="/static/" mapping="/**"></mvc:resources>
+
+이렇게 static 안에 있는 것을 찾겠다(동적파일들)는 뜻.
+
+자 이렇게 하니 실질적으로 static 안에 있으니, static"/" 이 루트 안에 있다고 생각하게끔
+매핑을 했다. 그러니 static 파일같은 것은 location 뒤에 두면 된다.
+
+###공지사항 컨트롤러 추가하기(11강)
+
+view 페이지 안에 
+notice 파일을 만들고, list와 detail jsp 페이지를 만들어준다. 
+
+List 와 detail Controller와 bean 설정 추가.
+
+이렇게 index 파일을 실행했는데, 주소에 html이 찍혀나온다. 
+이러면 안됨 ....
+왜 이렇게 나오냐 ? index 페이지에 href ="/notice/list.html"로 설정을 했기때문.
+여기서 html을 뺴야된다.
+
+이렇게 하니 Controller를 통해서 제대로 들어왔다.
+
+http://localhost:8081/notice/list
+
+
+자 이렇게 , list와 detail 컨틀롤러 그리고 view 페이지 dispatcher-servlet xml파일을 설정해주자. 
+
+
+detail은 혼자 직접.
+(성공)
+
+
+### Detail 컨틀롤러 추가와 view 페이지 집중화의 필요성
+
+detail 까지 성공해서 들어갔다.
+detail로 들어와서 이제 다시 우측 상단에 있는 고객센터 (list)에 들어가려고 하니,
+링크가 다시 html로 바뀌어있다. 
+
+우리가 고친 것은 index.jsp이다. 이 고객센터 header는 모든 페이지에 있다.
+이것을 집중화를 해줘야한다. 이 모든 page의 header 부분을 바꿔야한다.
+이것을 위해 필요한것이 tiles이다.
+maven repositores 가 불이 안들어온다. 
+그냥 직접 추가하자 일단. 
+
+### 페이지 공통분모 집중화 (13강)
+
+모든 페이지마다 갖고있는 header 영역, footer 부분 aside 부분 등이 있다. 
+
+이걸 분리해서, jsp:include 방법을 사용했는데, 
+이게 뭐가 문제냐 ? 
+여러 페이지에서 사용되는 녀석이라, 페이지마다 include하는게 중복되어서 나타나게 된다.
+이 inlcude 말고, 이것마저 집중해줄수있는 녀석이 tiles이다. 
+
+###페이지 모듈 분리하기 (14강)
+
+일단 newlec에서 받았던 파일들에, header와 footer 부분을 전부 지워놓기.
+
+고객센터 (customer)를 묶을 수 있는 이름으로 view 파일에 customer 파일 만들고, 
+그곳에 inc파일 만들기. 
+
+Layout이라는 이름으로 main을 뺄 것이다.
+
+자 이렇게 각각 customer 파일 밑 inc 파일에 aisde 부분, layout 부분, visual 부분을 다 분리 
+시켜 놓았다. 이것을 합치는 과정은 Tiles Lib을 거치게 될것이다
+
+
+###Tiles 지시서 작성하기 (15강)
+
+Tiles 라이브러리 추가 하는 과정 
+
+->tiles.apache.org
+
+여기서 tiles 3.0 들어가서 tiles.xml 코드 긁어와서 
+그대로 만들어준다. 
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+  <definition name="notice.list" template="/WEB-INF/view/customer/inc/layout.jsp">
+    <put-attribute name="title" value="Tiles tutorial homepage" />
+    <put-attribute name="header" value="/WEB-INF/view/inc/header.jsp" />
+    <put-attribute name="visual" value="/WEB-INF/view/customer/inc/visual.jsp" />
+    <put-attribute name="aside" value="/WEB-INF/view/customer/inc/aside.jsp" />
+    <put-attribute name="body" value="/WEB-INF/view/customer/notice/list.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/view/inc/footer.jsp" />
+    </definition>
+<definition name="notice.detail" template="/layouts/classic.jsp">
+    <put-attribute name="title" value="Tiles tutorial homepage" />
+    <put-attribute name="header" value="/WEB-INF/view/inc/header.jsp" />
+    <put-attribute name="visual" value="/WEB-INF/view/customer/inc/visual.jsp" />
+    <put-attribute name="aside" value="/WEB-INF/view/customer/inc/aside.jsp" />
+    <put-attribute name="body" value="/WEB-INF/view/customer/notice/detail.jsp" />
+    <put-attribute name="footer" value="/WEB-INF/view/inc/footer.jsp" />
+  </definition>
+</tiles-definitions>
+
+이러한 형태로 만들어준다. (다른 형태로 합쳐서 만들수있지만 일단 이렇게 만든다.)
+
+
+###레이아웃 페이지 만들기와 Tiles 라이브러리 설정하기 (16강)
+
+-> 메이븐 리파지터리에서 직접 긁어왔음.
+
+layout. jsp
+헤더 부분에 
+<tiles:insertAttribute name="header"/>
+를 넣음. 
+
+header라는 속성을 layout.jsp에서 저기에 꽂아달라고 지시한것이다.
+
+tiles.xml
+    <put-attribute name="title" value="공지사항" />
+layout.jsp
+    <title>
+    <tiles:getAsString name="title"/>
+    </title>
+
+이런식으로도 쓸수있다.
+
+자 합쳤는데 실행은 어떻게 할까??
+
+###Tiles ViewResolver 설정하기
+
+  	<bean
+		class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.tiles3.TilesView" />
+		<property name="order" value="1" />
+	</bean>
+
+	<bean
+		class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+		<property name="definitions" value="/WEB-INF/tiles.xml" />
+	</bean>
+
+이렇게 Dispatcher-servlet xml 파일에 넣어주는데
+어디서 많이 본 bean 설정이 있다.
+
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    	<property name="prefix" value="/WEB-INF/view/"></property>
+    	<property name="suffix" value=".jsp"></property>
+    	<property name="order" value="1" />
+    </bean>
+
+이렇게 우선순위를 정해주는 <property name="order" value="숫자" /> 
+프로퍼티 함수를 사용해서 충돌이 나지않게 해주자. 
+
+이렇게해서 돌렸더니 오류가 난다.
+jstl 라이브러리를 넣어주자. 
+
+tiles.xml 에 <definition name="notice.list" 이렇게 설정이 되어있으니 해당 jsp가 뜨는것.
+기존처럼 InternalResourceViewResolver 가 읽히도록 할려면 
+ModelAndView mv = new ModelAndView("customer/notice/list");
+이렇게 변경해서 해보면 tiles를 타지 않고 InternalResourceViewResolver 를 통해서 jsp가 읽히게 됨.
+
+
+사용한
+dependency : jstl 1.2, tiles 3.0.8, webmvc 5.2.21.RELEASE, tomcat-api 9.0.6
+
+build : maven-war-plugin 3.2.2 
+
+maven compiler : 1.8
+
+
+
+
+
+
+
+
+
+
+-----(4.25) (17강 ~ )-----
+
+
+
+
+
+
